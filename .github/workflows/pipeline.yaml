@@ -24,13 +24,12 @@ jobs:
         run: npm run build
       - name: Unit Test
         run: npm test
-      - name: Trigger deployment
-        if: ${{ github.event_name == 'push' }}
-        run: curl https://api.render.com/deploy/srv-${{ secrets.RENDER_SERVICE_ID }}?key=${{ secrets.RENDER_API_KEY }}
 
   tag_release:
     needs: [simple_deployment_pipeline]
     runs-on: ubuntu-22.04
+    outputs:
+      skip: ${{ steps.check_skip.outputs.skip }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -64,3 +63,13 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           DEFAULT_BUMP: patch
+  
+  deployment:
+    needs: [simple_deployment_pipeline, tag_release]
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Trigger deployment
+        if: ${{ github.event_name == 'push' && needs.tag_release.outputs.skip == 'false' }}
+        run: curl https://api.render.com/deploy/srv-${{ secrets.RENDER_SERVICE_ID }}?key=${{ secrets.RENDER_API_KEY }}
+    
