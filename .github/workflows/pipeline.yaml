@@ -38,15 +38,15 @@ jobs:
       - name: Github context
         env:
           GITHUB_CONTEXT: ${{ toJson(github) }}
-          run: echo "$GITHUB_CONTEXT"
+        run: echo "$GITHUB_CONTEXT"
       - name: commits
         env:
           COMMITS: ${{ toJson(github.event.commits) }}
-          run: echo "$COMMITS"
+        run: echo "$COMMITS"
       - name: commit messages
         env:
           COMMIT_MESSAGES: ${{ toJSon(github.event.commits.*.message) }}
-          run: echo "$COMMIT_MESSAGES"
+        run: echo "$COMMIT_MESSAGES"
       - name: Check for skip
         id: check_skip
         env:
