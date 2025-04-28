@@ -126,3 +126,31 @@ jobs:
         run: echo "status=failure" >> $GITHUB_OUTPUT
         if: failure()
 
+
+
+  discord:
+    needs: [simple_deployment_pipeline, e2e_test, tag_release, deployment]
+    runs-on: ubuntu-22.04
+    if: always()
+    steps:
+      - name: Notify success
+        if: ${{ needs.simple_deployment_pipeline.result == 'success' && needs.e2e_test.result == 'success' && needs.tag_release.result == 'success' && needs.deployment.result == 'success' }}
+        uses: rjstone/discord-webhook-notify@v1
+        with:
+          severity: info
+          details: Deployment pipeline succeeded!
+          webhookUrl: ${{ secrets.DISCORD_WEBHOOK }}
+
+      - name: Notify failure
+        if: ${{ needs.simple_deployment_pipeline.result == 'failure' || needs.e2e_test.result == 'failure' || needs.tag_release.result == 'failure' || needs.deployment.result == 'failure' }}
+        uses: rjstone/discord-webhook-notify@v1
+        with:
+          severity: error
+          details: |
+            Deployment pipeline failed!
+            Failed jobs:
+            ${{ needs.simple_deployment_pipeline.result == 'failure' && '❌ simple_deployment_pipeline' || '' }}
+            ${{ needs.e2e_test.result == 'failure' && '❌ e2e_test' || '' }}
+            ${{ needs.tag_release.result == 'failure' && '❌ tag_release' || '' }}
+            ${{ needs.deployment.result == 'failure' && '❌ deployment' || '' }}
+          webhookUrl: ${{ secrets.DISCORD_WEBHOOK }}
