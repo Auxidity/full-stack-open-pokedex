@@ -132,7 +132,8 @@ jobs:
   discord:
     needs: [simple_deployment_pipeline, e2e_test, tag_release, deployment]
     runs-on: ubuntu-22.04
-    if: always()
+    #So that we dont spam the channel too much while testing.. return to always() after testing
+    if: ${{ github.event_Name == 'push' && github.ref == 'refs/heads/main' }}
     steps:
       - name: Send Discord success message
         if: ${{ needs.simple_deployment_pipeline.result == 'success' && needs.e2e_test.result == 'success' && needs.tag_release.result == 'success' && needs.deployment.result == 'success' }}
