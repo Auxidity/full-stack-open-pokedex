@@ -26,10 +26,10 @@ jobs:
         run: npm run build
       - name: Unit Test
         run: npm test
-      - id: set_status
+      - id: set_status_pipeline_success
         run: echo "status=success" >> $GITHUB_OUTPUT
         if: success()
-      - id: set_status
+      - id: set_status_pipeline_failure
         run: echo "status=failure" >> $GITHUB_OUTPUT
         if: failure()
 
@@ -55,10 +55,10 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 30
-      - id: set_status
+      - id: set_status_e2e_success
         run: echo "status=success" >> $GITHUB_OUTPUT
         if: success()
-      - id: set_status
+      - id: set_status_e2e_failure
         run: echo "status=failure" >> $GITHUB_OUTPUT
         if: failure()
   
@@ -102,10 +102,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           DEFAULT_BUMP: patch
-      - id: set_status
+      - id: set_status_tag_success
         run: echo "status=success" >> $GITHUB_OUTPUT
         if: success()
-      - id: set_status
+      - id: set_status_tag_failure
         run: echo "status=failure" >> $GITHUB_OUTPUT
         if: failure()
   
@@ -119,10 +119,10 @@ jobs:
       - name: Trigger deployment
         if: ${{ github.event_name == 'push' && needs.tag_release.outputs.skip == 'false' }}
         run: curl https://api.render.com/deploy/srv-${{ secrets.RENDER_SERVICE_ID }}?key=${{ secrets.RENDER_API_KEY }}
-      - id: set_status
+      - id: set_status_deployment_success
         run: echo "status=success" >> $GITHUB_OUTPUT
         if: success()
-      - id: set_status
+      - id: set_status_deployment_failure
         run: echo "status=failure" >> $GITHUB_OUTPUT
         if: failure()
 
