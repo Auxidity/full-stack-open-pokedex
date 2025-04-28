@@ -126,3 +126,34 @@ jobs:
         run: echo "status=failure" >> $GITHUB_OUTPUT
         if: failure()
 
+
+
+  #I tried using rjstone/discord-webhook-notify ,but it is broken with an open issue that replicated mine entirely. It suggested using curl as a replacement, so I'm using curl aswell.
+  discord:
+    needs: [simple_deployment_pipeline, e2e_test, tag_release, deployment]
+    runs-on: ubuntu-22.04
+    if: always()
+    steps:
+      - name: Send Discord success message
+        if: ${{ needs.simple_deployment_pipeline.result == 'success' && needs.e2e_test.result == 'success' && needs.tag_release.result == 'success' && needs.deployment.result == 'success' }}
+        run: |
+          curl -H "Content-Type: application/json" \
+            -X POST \
+            -d '{"content": "**✅ Deployment pipeline succeeded!**"}' \
+            ${{ secrets.DISCORD_WEBHOOK }}
+
+      - name: Send Discord failure message
+        if: ${{ needs.simple_deployment_pipeline.result == 'failure' || needs.e2e_test.result == 'failure' || needs.tag_release.result == 'failure' || needs.deployment.result == 'failure' }}
+        run: |
+          failed_jobs=""
+          [[ "${{ needs.simple_deployment_pipeline.result }}" == "failure" ]] && failed_jobs="${failed_jobs}❌ simple_deployment_pipeline\n"
+          [[ "${{ needs.e2e_test.result }}" == "failure" ]] && failed_jobs="${failed_jobs}❌ e2e_test\n"
+          [[ "${{ needs.tag_release.result }}" == "failure" ]] && failed_jobs="${failed_jobs}❌ tag_release\n"
+          [[ "${{ needs.deployment.result }}" == "failure" ]] && failed_jobs="${failed_jobs}❌ deployment\n"
+
+          payload="**🚨 Deployment pipeline failed!**\n\`\`\`\n$failed_jobs\`\`\`"
+
+          curl -H "Content-Type: application/json" \
+            -X POST \
+            -d "{\"content\": \"$payload\"}" \
+            ${{ secrets.DISCORD_WEBHOOK }}
